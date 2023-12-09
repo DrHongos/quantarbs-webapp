@@ -2,6 +2,8 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 use crate::components::date_picker::DatePicker;
+use std::collections::HashMap;
+use serde_json::Value;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -34,30 +36,51 @@ async fn fetch_tokens() -> Vec<String> {
         .json::<Vec<String>>()
         .await
         .expect("Error parsing: tokens");
-
-//    logging::log!("data is {:#?}", data);
     data
 }
 
+#[derive(Debug, Clone)]
+pub struct ClosePrices {
+    opentime: String,
+    close: f64
+}
+
+impl From<Value> for ClosePrices {
+    fn from(value: Value) -> Self {
+        ClosePrices { 
+            opentime: value["opentime"].as_str().unwrap().to_owned(), 
+            close: value["close"].as_f64().unwrap() 
+        }
+    }   
+}
+
+// get opentime & close price of each token
+async fn fetch_token_data(start: String, end: String, name: String) -> Vec<Value> {
+        let mut map = HashMap::new();
+        map.insert("start", &start);
+        map.insert("end", &end);
+        map.insert("name", &name);
+        // 
+        let client = reqwest::Client::new();
+
+        let res: Vec<Value> = client.post("http://opinologos.xyz:8080/get_range_close")
+            .json(&map)
+            .send()
+            .await
+            .expect("Could not send post: get token data")
+            .json::<Vec<Value>>()
+            .await
+            .expect("Server did not return token data");
+        //logging::log!("Received {:#?}", res);
+        res
+}
+    
+pub fn simplify(d: String) -> String {
+    format!("{} 00:00:00", d)           // parsed for server query
+}
 /// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
-/* 
- to call /get_range_close
-#[derive(Debug, Deserialize, Serialize)]
-pub struct PairRange {
-    pub name: String,
-    pub start: String,      // 'YYYY-MM-DD HH:MM:DD'
-    pub end: String
-}
-
-*/
-
-    // move configs to a outter component 
-    // select a subset of tokens
-    // launch analysis
-    // download results
-
     let (correlation_factor, set_correlation_factor) = create_signal(0.7);
     let (days_execution, set_days_execution) = create_signal(30);
     let (name, set_name) = create_signal("test".to_string()); 
@@ -68,11 +91,21 @@ pub struct PairRange {
 
     let tokens =
         create_local_resource(move || (), |_| { fetch_tokens() });
-    
-    // create function to query get_range_close
-    pub fn simplify(d: String) -> String {
-        format!("{} 00:00:00", d)           // parsed for server query
-    }
+
+    let token_data = create_resource(
+        token_selected, 
+        move |n| async move {
+            let s = move || start.get();
+            let e = move || end.get();
+            if let Some(name) = n {
+                logging::log!("Fetching {:#?} data", name);
+                fetch_token_data(simplify(s()), simplify(e()), name).await
+            } else {
+                logging::log!("no token, no fetch");
+                Vec::new()
+            }
+        }
+    );
 
     view! {
         <h1>"Quantarbs"</h1>
@@ -123,7 +156,6 @@ pub struct PairRange {
                     view!{
                         <button 
                         on:click= move |_| {
-//                            logging::log!("Passing {}", &c);
                             set_token_selected.set(Some(c.clone()))
                         }
                         class={"token"}>
@@ -141,7 +173,30 @@ pub struct PairRange {
                 view! {
                     <>
                         <p>{selected}</p>
-                        <button class="fetcher">"Get data"</button>
+
+                        {move || match token_data.get() {
+                            None => view! { <p>"Loading data..."</p> }.into_view(),
+                            Some(data) => {
+                                let token_table = data.into_iter().map(|t| 
+                                    {
+                                    let c: ClosePrices = t.into();
+                                    view!{
+                                        <tr>
+                                        <td>{c.opentime}</td>
+                                        <td>{c.close}</td>
+                                        </tr>
+                                    }}).collect_view();
+                                view! { 
+                                    <table>
+                                    <tr>
+                                        <th>"Open time"</th>
+                                        <th>"Close price (USDT)"</th>
+                                    </tr>
+                                    {token_table}
+                                    </table> 
+                                }.into_view()
+                            }
+                        }}
                     </>
                 }.into_view()
             }
