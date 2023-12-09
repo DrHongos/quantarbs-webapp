@@ -1,0 +1,26 @@
+body {
+	font-family: sans-serif;
+	text-align: center;
+}
+
+.token {
+	margin: 2px;
+	padding: 5px;
+	border: 1px solid lightcoral;
+	border-radius: 5px;
+//	background-color: blanchedalmond;
+	cursor: pointer;
+}
+.token::before {
+	transition: .5s;
+	transform: scale(.9);
+}
+.token:hover::before {
+	transform: scale(1.1);
+  	box-shadow: 0 0 15px #ffee10;
+}
+.token:hover {
+	color: blue;
+	box-shadow: 0 0 5px #ffee10;
+	text-shadow: 0 0 5px #ffee10;
+}
