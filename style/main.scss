@@ -24,3 +24,23 @@ body {
 	box-shadow: 0 0 5px #ffee10;
 	text-shadow: 0 0 5px #ffee10;
 }
+
+.datePicker div {
+	padding: 5px;
+	display:flexbox;
+	min-width: 314px;
+	justify-content: space-between;
+	border: 1px solid black;
+}
+
+.datePicker input {
+	max-width: 70px;
+	border-radius: 3px;
+}
+
+.fetcher {
+	padding: 10px;
+	margin: auto;
+	border: 2px solid gold;
+	font-weight: 780;
+}

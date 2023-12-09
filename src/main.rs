@@ -1,3 +1,5 @@
+pub mod components;
+
 #[cfg(feature = "ssr")]
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -62,7 +64,7 @@ pub fn main() {
     use leptos::*;
     use quantarbs_webapp::app::*;
     use wasm_bindgen::prelude::wasm_bindgen;
-
+    use crate::components;
     console_error_panic_hook::set_once();
 
     leptos::mount_to_body(App);
