@@ -6,6 +6,14 @@ body {
 .token {
 	margin: 2px;
 	padding: 5px;
+	border: 2px solid green;
+	border-radius: 5px;
+//	background-color: blanchedalmond;
+	cursor: pointer;
+}
+.token-u {
+	margin: 2px;
+	padding: 5px;
 	border: 1px solid lightcoral;
 	border-radius: 5px;
 //	background-color: blanchedalmond;
@@ -24,7 +32,6 @@ body {
 	box-shadow: 0 0 5px #ffee10;
 	text-shadow: 0 0 5px #ffee10;
 }
-
 .datePicker div {
 	padding: 5px;
 	display:flexbox;
